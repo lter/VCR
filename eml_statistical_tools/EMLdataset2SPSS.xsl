@@ -43,14 +43,14 @@
     </xsl:template>
     
     <xsl:template name="partyName">
-        <xsl:value-of select="individualName/salutation"/><xsl:text> </xsl:text> <xsl:value-of select="individualName/givenName"/> <xsl:text> </xsl:text> <xsl:value-of select="individualName/surName"/>
-        <xsl:value-of select="organizationName"/><xsl:text></xsl:text>
+        <xsl:value-of select="individualName/salutation"/><xsl:text> </xsl:text> <xsl:value-of select="individualName/givenName"/> <xsl:text> </xsl:text> <xsl:value-of select="individualName/surName"/> <xsl:text> - </xsl:text>
+        <xsl:value-of select="organizationName"/><xsl:text> </xsl:text>
     </xsl:template>
     
     <xsl:template name="partyNameEmail">
-        <xsl:value-of select="individualName/salutation"/><xsl:text> </xsl:text> <xsl:value-of select="individualName/givenName"/> <xsl:text> </xsl:text> <xsl:value-of select="individualName/surName"/>
-        <xsl:value-of select="positionName"/><xsl:text></xsl:text>
-        <xsl:value-of select="organizationName"/><xsl:text></xsl:text>
+        <xsl:value-of select="individualName/salutation"/><xsl:text> </xsl:text> <xsl:value-of select="individualName/givenName"/> <xsl:text> </xsl:text> <xsl:value-of select="individualName/surName"/><xsl:text> - </xsl:text>
+        <xsl:value-of select="positionName"/><xsl:text> </xsl:text>
+        <xsl:value-of select="organizationName"/><xsl:text> </xsl:text>
         <xsl:text> - </xsl:text> <xsl:value-of select="electronicMailAddress"/>
     </xsl:template>
 
@@ -76,7 +76,10 @@ Comment  Contact: <xsl:text></xsl:text>
 Title ' <xsl:value-of select="title"/>' <xsl:text>.</xsl:text>
         <xsl:if test="dataTable[. !='']">
             <xsl:for-each select="dataTable">
-                <!-- List attributes -->
+                <!-- List attributes --><xsl:text/> 
+
+Comment You should replace 'PUT-LOCAL-PATH-TO-DATA-FILE-HERE'  (below) with the appropriate path. <xsl:text/>  
+Comment    to your data file (e.g., c:\mydata\datafile.txt). <xsl:text/>                
 GET DATA  /TYPE=TXT/
                / FILE="PUT-LOCAL-PATH-TO-DATA-FILE-HERE" <xsl:text></xsl:text>
                 <xsl:choose>
@@ -203,7 +206,7 @@ comment The analyses below are basic descriptions of the variables. After testin
  <!--  Generate some default statistical summaries for nominal variables -->       
                 <xsl:for-each select="attributeList">
                     <xsl:for-each select="attribute">  
-                        <xsl:if test="measurementScale/nominal|ordinal[. != '']"> 
+                        <xsl:if test="measurementScale/nominal|measurementScale/ordinal[. != '']"> 
 Frequencies   variables=<xsl:value-of select="attributeName"/> <xsl:text> /order=analysis. </xsl:text>               
                         </xsl:if> 
                     </xsl:for-each>
@@ -211,7 +214,7 @@ Frequencies   variables=<xsl:value-of select="attributeName"/> <xsl:text> /order
 <!--  Generate some default statistical summaries for continuous variables -->       
                 <xsl:for-each select="attributeList">
                     <xsl:for-each select="attribute">  
-                        <xsl:if test="measurementScale/interval|ratio|datetime[. != '']"> 
+                        <xsl:if test="measurementScale/interval|measurementScale/ratio|measurementScale/datetime[. != '']"> 
 Descriptives   variables=<xsl:value-of select="attributeName"/> <xsl:text> . </xsl:text>               
                         </xsl:if> 
                     </xsl:for-each>
