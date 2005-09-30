@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <!-- 
-    EMLdataset2SPSS version 1.0
     This stylesheet takes an EML document that includes attribute & physical modules and creates an
     SPSS (Statistical Package for the Social Sciences) program that can read data stored in either delimited or fixed
     text files.  The SPSS program includes treatment of missing values, labeling and does rudimentary analyses of the
@@ -10,7 +9,6 @@
     
     Things that still need work: 
            Multi-line data records
-           Date variables
     
     Modified by John Porter, University of Virginia, 2005. 
     Modified version   Copyright 2005 University of Virginia
@@ -40,19 +38,22 @@
     <xsl:output method="text"/>
     <xsl:template match="/">
         <xsl:for-each select="*/dataset">
-            <xsl:choose>
-                <xsl:when test="dataTable/physical/dataFormat/textFormat[. ='']">
- Sorry, this EML document does not contain sufficient information to construct an SPSS syntax file. 
- The document must include a dataTable with both "attributeList" and "physical"  nodes and the underlying 
-data must be  a text file.                
-                </xsl:when>
-                <xsl:otherwise>          
-                    <xsl:call-template name="dataset"/>
-                </xsl:otherwise>
-            </xsl:choose>
+            <xsl:call-template name="dataset"/>
         </xsl:for-each>
     </xsl:template>
     
+    <xsl:template name="partyName">
+        <xsl:value-of select="individualName/salutation"/><xsl:text> </xsl:text> <xsl:value-of select="individualName/givenName"/> <xsl:text> </xsl:text> <xsl:value-of select="individualName/surName"/>
+        <xsl:value-of select="organizationName"/><xsl:text></xsl:text>
+    </xsl:template>
+    
+    <xsl:template name="partyNameEmail">
+        <xsl:value-of select="individualName/salutation"/><xsl:text> </xsl:text> <xsl:value-of select="individualName/givenName"/> <xsl:text> </xsl:text> <xsl:value-of select="individualName/surName"/>
+        <xsl:value-of select="positionName"/><xsl:text></xsl:text>
+        <xsl:value-of select="organizationName"/><xsl:text></xsl:text>
+        <xsl:text> - </xsl:text> <xsl:value-of select="electronicMailAddress"/>
+    </xsl:template>
+
     <xsl:template name="dataset">
         <xsl:for-each select="../@packageId">Comment Package ID: <xsl:value-of
             select="../@packageId"/> Cataloging System:<xsl:value-of select="../@system"/>  <xsl:text>.</xsl:text>  
@@ -69,198 +70,167 @@ Comment  Metadata Provider: <xsl:text></xsl:text>
         <xsl:for-each select="contact">
 Comment  Contact: <xsl:text></xsl:text>            
             <xsl:call-template name="partyNameEmail"/>
-        </xsl:for-each>       
+        </xsl:for-each>
         
         
- Title ' <xsl:value-of select="title"/>' <xsl:text>.</xsl:text>
-        <xsl:choose>
-         <xsl:when test="dataTable[. !='']">
+Title ' <xsl:value-of select="title"/>' <xsl:text>.</xsl:text>
+        <xsl:if test="dataTable[. !='']">
             <xsl:for-each select="dataTable">
-                <xsl:call-template name="getData"/>           
-                 <xsl:call-template name="missingValues"/>
-                  <xsl:call-template name="varLabels"/>               
-                <xsl:call-template name="valueLabels"/>
-                <xsl:call-template name="stats"/>
-                <xsl:call-template name="QAreport"/>               
-          </xsl:for-each>
-         </xsl:when> 
-            <xsl:otherwise>
-                Sorry, this EML document does not contain sufficient information to construct an SPSS syntax file. 
-                The document must include a dataTable with both "attributeList" and "physical"  nodes and the underlying 
-                data must be  a text file.                     
-            </xsl:otherwise>
-        </xsl:choose>
-    </xsl:template>
-    
-    <xsl:template name="partyName">
-        <xsl:value-of select="individualName/salutation"/><xsl:text> </xsl:text> <xsl:value-of select="individualName/givenName"/> <xsl:text> </xsl:text> <xsl:value-of select="individualName/surName"/>
-        <xsl:value-of select="organizationName"/><xsl:text></xsl:text>
-    </xsl:template>
-    
-    <xsl:template name="partyNameEmail">
-        <xsl:value-of select="individualName/salutation"/><xsl:text> </xsl:text> <xsl:value-of select="individualName/givenName"/> <xsl:text> </xsl:text> <xsl:value-of select="individualName/surName"/>
-        <xsl:value-of select="positionName"/><xsl:text></xsl:text>
-        <xsl:value-of select="organizationName"/><xsl:text></xsl:text>
-        <xsl:text> - </xsl:text> <xsl:value-of select="electronicMailAddress"/>
-    </xsl:template>
-    
-    <xsl:template name="getData" >              
-        <!-- List attributes -->
-COMMENT     Note: you must replace the   "PUT-LOCAL-PATH-TO-DATA-FILE-HERE" below with the actual
-COMMENT     location of  the data file (e.g., "c:\mydata\datafile.txt") before running this program. 
+                <!-- List attributes -->
 GET DATA  /TYPE=TXT/
-        / FILE="PUT-LOCAL-PATH-TO-DATA-FILE-HERE" <xsl:text></xsl:text>
-        <xsl:choose>
-            <xsl:when test="physical/dataFormat/textFormat/numHeaderLines[.>0]">
-                /FIRSTCASE=<xsl:value-of select="physical/dataFormat/textFormat/numHeaderLines + 1"/><xsl:text></xsl:text>
-            </xsl:when>
-        </xsl:choose>
-        <xsl:choose>
-            <xsl:when test="physical/dataFormat/textFormat/complex/textFixed[. !='']">
-                /ARRANGEMENT=Fixed<xsl:text> </xsl:text> 
-            </xsl:when>
-            <xsl:when test="physical/dataFormat/textFormat/simpleDelimited[. !=''] ">
-                /ARRANGEMENT=Delimited<xsl:text> </xsl:text>
+               / FILE="PUT-LOCAL-PATH-TO-DATA-FILE-HERE" <xsl:text></xsl:text>
                 <xsl:choose>
-                    <xsl:when test="physical/dataFormat/textFormat/simpleDelimited/fieldDelimiter[.='0x20']">
-                        /DELIMITERS=" "
+                    <xsl:when test="physical/dataFormat/textFormat/numHeaderLines[.>0]">
+                        /FIRSTCASE=<xsl:value-of select="physical/dataFormat/textFormat/numHeaderLines + 1"/><xsl:text></xsl:text>
                     </xsl:when>
-                    <xsl:when test="physical/dataFormat/textFormat/simpleDelimited/fieldDelimiter[.='0x09']">
-                        /DELIMITERS="\t"
-                    </xsl:when>
-                    <xsl:otherwise>
-                        /DELIMITERS="<xsl:value-of select="physical/dataFormat/textFormat/simpleDelimited/fieldDelimiter"/>" <xsl:text> </xsl:text>
-                    </xsl:otherwise>
                 </xsl:choose>
-                <xsl:if test="physical/dataFormat/textFormat/simpleDelimited/quoteCharacter[.!='']">
-                    <xsl:choose>
-                        <xsl:when test='physical/dataFormat/textFormat/simpleDelimited/quoteCharacter[.="&apos;"]'>
-                            /QUALIFIER="<xsl:value-of select="physical/dataFormat/textFormat/simpleDelimited/quoteCharacter"/>"<xsl:text> </xsl:text>
-                        </xsl:when>
-                        <xsl:when test="physical/dataFormat/textFormat/simpleDelimited/quoteCharacter[.='&quot;']">
-                            /QUALIFIER='<xsl:value-of select="physical/dataFormat/textFormat/simpleDelimited/quoteCharacter"/>'<xsl:text> </xsl:text>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            /QUALIFIER="<xsl:value-of select="physical/dataFormat/textFormat/simpleDelimited/quoteCharacter"/>"<xsl:text> </xsl:text>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:if>
-            </xsl:when>
-        </xsl:choose>
-        <xsl:for-each select="attributeList">
-            /VARIABLES= 
-            <xsl:for-each select="attribute">
-                <xsl:value-of select="attributeName"/>   <xsl:text> </xsl:text>
-                <xsl:if test="../../physical/dataFormat/textFormat/complex/textFixed[. !='']">
-                    <xsl:variable name="nodeNum" select="position()"/>
-                    <xsl:value-of select="../../physical/dataFormat/textFormat/complex/textFixed[$nodeNum]/fieldStartColumn - 1"/><xsl:text>-</xsl:text>
-                    <xsl:value-of select="../../physical/dataFormat/textFormat/complex/textFixed[$nodeNum]/fieldWidth + ../../physical/dataFormat/textFormat/complex/textFixed[$nodeNum]/fieldStartColumn - 2" /> 
-                </xsl:if>
                 <xsl:choose>
-                    <xsl:when test="storageType = 'varchar'">
-                        <xsl:text> A </xsl:text>
+                    <xsl:when test="physical/dataFormat/textFormat/complex/textFixed[. !='']">
+                        /ARRANGEMENT=Fixed<xsl:text> </xsl:text> 
                     </xsl:when>
-                    <xsl:when test="storageType = 'integer'">
-                        <xsl:variable name="nodeNum" select="position()"/>
+                    <xsl:when test="physical/dataFormat/textFormat/simpleDelimited[. !=''] ">
+                        /ARRANGEMENT=Delimited<xsl:text> </xsl:text>
                         <xsl:choose>
-                            <xsl:when test="../../physical/dataFormat/textFormat/complex/textFixed[$nodeNum]/fieldWidth[. > 0]">
-                                <xml:text> F</xml:text><xsl:value-of select="../../physical/dataFormat/textFormat/complex/textFixed[$nodeNum]/fieldWidth"></xsl:value-of><xsl:text>.0</xsl:text>                                 
+                            <xsl:when test="physical/dataFormat/textFormat/simpleDelimited/fieldDelimiter[.='0x20']">
+                                /DELIMITERS=" " <xsl:text/>
+                            </xsl:when>
+                            <xsl:when test="physical/dataFormat/textFormat/simpleDelimited/fieldDelimiter[.='#x20']">
+                                /DELIMITERS=" " <xsl:text/>
+                            </xsl:when>
+                            <xsl:when test="physical/dataFormat/textFormat/simpleDelimited/fieldDelimiter[.='0x09']">
+                                /DELIMITERS="\t" <xsl:text/>
+                            </xsl:when>
+                            <xsl:when test="physical/dataFormat/textFormat/simpleDelimited/fieldDelimiter[.='#x09']">
+                                /DELIMITERS="\t" <xsl:text/>
                             </xsl:when>
                             <xsl:otherwise>
-                                <xsl:text> F10.0</xsl:text>
+                              /DELIMITERS="<xsl:value-of select="physical/dataFormat/textFormat/simpleDelimited/fieldDelimiter"/>" <xsl:text> </xsl:text>
                             </xsl:otherwise>
                         </xsl:choose>
+			
+                        <xsl:if test="physical/dataFormat/textFormat/simpleDelimited/quoteCharacter[.!='']">
+                            <xsl:choose>
+                                <xsl:when test='physical/dataFormat/textFormat/simpleDelimited/quoteCharacter[.="&apos;"]'>
+                                    /QUALIFIER="<xsl:value-of select="physical/dataFormat/textFormat/simpleDelimited/quoteCharacter"/>"<xsl:text> </xsl:text>
+                                </xsl:when>
+                                <xsl:when test="physical/dataFormat/textFormat/simpleDelimited/quoteCharacter[.='&quot;']">
+                                    /QUALIFIER='<xsl:value-of select="physical/dataFormat/textFormat/simpleDelimited/quoteCharacter"/>'<xsl:text> </xsl:text>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    /QUALIFIER="<xsl:value-of select="physical/dataFormat/textFormat/simpleDelimited/quoteCharacter"/>"<xsl:text> </xsl:text>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </xsl:if>
                     </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:text> F </xsl:text>
-                    </xsl:otherwise>                           
                 </xsl:choose>
-                <xsl:text> </xsl:text> 
-            </xsl:for-each> 
-        </xsl:for-each>
-        <xsl:text>.</xsl:text>
-Execute.                
-    </xsl:template>   
-    
-    <xsl:template name="missingValues">
-        <!-- Set missing value codes -->
-        <xsl:for-each select="attributeList">
-            <xsl:for-each select="attribute">  
-                <xsl:if test="missingValueCode[. != '']">
+                <xsl:for-each select="attributeList">
+                    /VARIABLES= 
+                    <xsl:for-each select="attribute">
+                        <xsl:value-of select="attributeName"/>   <xsl:text> </xsl:text>
+                        <xsl:if test="../../physical/dataFormat/textFormat/complex/textFixed[. !='']">
+                            <xsl:variable name="nodeNum" select="position()"/>
+                            <xsl:value-of select="../../physical/dataFormat/textFormat/complex/textFixed[$nodeNum]/fieldStartColumn - 1"/><xsl:text>-</xsl:text>
+                            <xsl:value-of select="../../physical/dataFormat/textFormat/complex/textFixed[$nodeNum]/fieldWidth + ../../physical/dataFormat/textFormat/complex/textFixed[$nodeNum]/fieldStartColumn - 2" /> 
+                        </xsl:if>
+                        <xsl:choose>
+                            <xsl:when test="(storageType = 'varchar') or (storageType = 'string') or (starts-with(storageType,'char'))">
+                                <xsl:text> A </xsl:text>
+                             </xsl:when>
+                            <xsl:when test="(starts-with(storageType,'int')) or (storageType = 'byte')">
+                                <xsl:variable name="nodeNum" select="position()"/>
+                                <xsl:choose>
+                                    <xsl:when test="../../physical/dataFormat/textFormat/complex/textFixed[$nodeNum]/fieldWidth[. > 0]">
+                                       <xml:text> F</xml:text><xsl:value-of select="../../physical/dataFormat/textFormat/complex/textFixed[$nodeNum]/fieldWidth"></xsl:value-of><xsl:text>.0</xsl:text>                                 
+                                    </xsl:when>
+                                    <xsl:otherwise>
+                                       <xsl:text> F10.2</xsl:text>
+                                    </xsl:otherwise>
+                                 </xsl:choose>
+                             </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:text> F </xsl:text>
+                            </xsl:otherwise>                           
+                        </xsl:choose>
+                        <xsl:text> </xsl:text> 
+                    </xsl:for-each> 
+                </xsl:for-each>
+                <xsl:text>.</xsl:text>
+execute.                
+                
+<!-- Set missing value codes -->
+                <xsl:for-each select="attributeList">
+                    <xsl:for-each select="attribute">  
+                        <xsl:if test="missingValueCode[. != '']">
 MISSING VALUES  <xsl:value-of select="attributeName"/> <xsl:for-each select="missingValueCode/code">
-                        <xsl:if test="position()= 1">(</xsl:if>
-                        <xsl:text>'</xsl:text><xsl:value-of select="."/><xsl:text>'</xsl:text>
-                        <xsl:if test="position()!=last()">,</xsl:if>
-                        <xsl:if test="position()=last()">)</xsl:if>
-                    </xsl:for-each><xsl:text>.</xsl:text> 
-                </xsl:if>  
-            </xsl:for-each> 
-        </xsl:for-each> 
-    </xsl:template>         
-    
-    <xsl:template name="varLabels">
-        <!-- Now lets list out the variable labels -->
-        <xsl:for-each select="attributeList">
-            <xsl:for-each select="attribute">  
-                <xsl:if test="attributeLabel[. != '']">
+    <xsl:if test="position()= 1">(</xsl:if>
+    <xsl:text>'</xsl:text><xsl:value-of select="."/><xsl:text>'</xsl:text>
+    <xsl:if test="position()!=last()">,</xsl:if>
+    <xsl:if test="position()=last()">)</xsl:if>
+    </xsl:for-each><xsl:text>.</xsl:text> 
+                        </xsl:if>  
+                    </xsl:for-each> 
+                </xsl:for-each> 
+               
+
+ <!-- Now lets list out the variable labels -->
+<xsl:for-each select="attributeList">
+                <xsl:for-each select="attribute">  
+                   <xsl:if test="attributeLabel[. != '']">
 VAR LABELS   <xsl:value-of select="attributeName"/> '<xsl:value-of select="attributeLabel"/>- <xsl:value-of select="measurementScale/*/unit/*"/>' <xsl:text>.</xsl:text> 
-                </xsl:if>  
-            </xsl:for-each> 
-        </xsl:for-each>
-    </xsl:template>
-    
-    <xsl:template name="valueLabels">
-        <!-- List out the Value Labels (if data uses codes) -->                
+                    </xsl:if>  
+                </xsl:for-each> 
+</xsl:for-each>
+ 
+<!-- List out the Value Labels (if data uses codes) -->                
         <xsl:for-each select="attributeList">
             <xsl:for-each select="attribute">  
                 <xsl:if test="measurementScale/nominal[. != '']">
                     <xsl:if test="measurementScale/nominal/nonNumericDomain/enumeratedDomain[. != '']">
 VALUE LABELS   <xsl:value-of select="attributeName"/> <xsl:text> </xsl:text>   
-                        <xsl:for-each select="measurementScale/nominal/nonNumericDomain/enumeratedDomain/codeDefinition">
-                            <xsl:if test="code[. !='']">
-                                '<xsl:value-of select="code"/>'  '<xsl:value-of select="definition"/>' <xsl:text> </xsl:text>
-                            </xsl:if>
-                        </xsl:for-each>
-                        <xsl:text>.</xsl:text>
+                          <xsl:for-each select="measurementScale/nominal/nonNumericDomain/enumeratedDomain/codeDefinition">
+                              <xsl:if test="code[. !='']">
+                                  '<xsl:value-of select="code"/>'  '<xsl:value-of select="definition"/>' <xsl:text> </xsl:text>
+                              </xsl:if>
+                          </xsl:for-each>
+                     <xsl:text>.</xsl:text>
                     </xsl:if>
-                </xsl:if>  
+                  </xsl:if>  
             </xsl:for-each>
         </xsl:for-each>
-    </xsl:template>             
-    
-    <xsl:template name="stats" >             
+                
+                
 comment The analyses below are basic descriptions of the variables. After testing, they should be replaced.                 
-        <!--  Generate some default statistical summaries for nominal variables -->       
-        <xsl:for-each select="attributeList">
-            <xsl:for-each select="attribute">  
-                <xsl:if test="measurementScale/nominal|ordinal[. != '']"> 
+ <!--  Generate some default statistical summaries for nominal variables -->       
+                <xsl:for-each select="attributeList">
+                    <xsl:for-each select="attribute">  
+                        <xsl:if test="measurementScale/nominal|ordinal[. != '']"> 
 Frequencies   variables=<xsl:value-of select="attributeName"/> <xsl:text> /order=analysis. </xsl:text>               
-                </xsl:if> 
-            </xsl:for-each>
-        </xsl:for-each>
-        <!--  Generate some default statistical summaries for continuous variables -->       
-        <xsl:for-each select="attributeList">
-            <xsl:for-each select="attribute">  
-                <xsl:if test="measurementScale/interval|ratio|datetime[. != '']"> 
+                        </xsl:if> 
+                    </xsl:for-each>
+                </xsl:for-each>
+<!--  Generate some default statistical summaries for continuous variables -->       
+                <xsl:for-each select="attributeList">
+                    <xsl:for-each select="attribute">  
+                        <xsl:if test="measurementScale/interval|ratio|datetime[. != '']"> 
 Descriptives   variables=<xsl:value-of select="attributeName"/> <xsl:text> . </xsl:text>               
-                </xsl:if> 
-            </xsl:for-each>
-        </xsl:for-each>
+                        </xsl:if> 
+                    </xsl:for-each>
+                </xsl:for-each>
 Execute. 
-    </xsl:template>
-    
-    <xsl:template name="QAreport">              
-        <!-- Generate range checks and list bad cases -->  
+                
+                <!-- Generate range checks and list bad cases -->  
 COMMENT List cases where data is out of range<xsl:text>.</xsl:text>  
 COMMENT Note: if no out of range cases are detected, the variable names will be listed, but no actual cases<xsl:text>.</xsl:text>  
 TEMPORARY <xsl:text>.</xsl:text>               
 STRING BADVARS (A255)<xsl:text>.</xsl:text>
-        <xsl:call-template name="rangecheck"/>
+                <xsl:call-template name="rangecheck"/>
 SELECT IF (BADVARS NE "")<xsl:text>.</xsl:text> 
 LIST VARIABLES=ALL.
-Execute.      
-    </xsl:template>
-    
+Execute.                 
+        </xsl:for-each>
+     </xsl:if>  
+        </xsl:template>
+
     <xsl:template name="rangecheck">
           <xsl:for-each select="attributeList">
               <xsl:for-each select="attribute">
