@@ -1,0 +1,24 @@
+EMLdataset2SAS.xsl - John Porter 11/21/2005
+
+EMLdataset2SAS.xsl is an XML Stylesheet, that when used with an XML processor such as xalan, creates a program for the Statistical Analysis System (SAS).
+
+CAPABILITIES:
+
+INPUT statement automatically populated with attribute and format information.
+
+Automatically provides labels for variables (attributes).
+
+Basic statistical analyses of frequencies and descriptive statistics are provided
+
+A quality assurance listing consisting of range checks is also included. 
+
+
+LIMITATIONS: 
+
+The underlying data file must be text, in either a fixed column or delimited column format. 
+
+The EML document must include at least one "dataTable" that in turn includes both "attributeList" and "physical" nodes.  
+
+The user still needs to edit the resulting program file to add the path to the data file on the local system. 
+
+Handling of dates may be unreliable. 
