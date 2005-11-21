@@ -5,7 +5,7 @@
     text files.  The SAS program includes treatment of missing values, labeling and does rudimentary analyses of the
     data, including range checking. 
     
-    Users of the SPSS program need to substitute the path to their data file in the GET DATA statement.
+    Users of the SAS program need to substitute the path to their data file in the INFILE statement.
     
     Things that still need work: 
            Multi-line data records
