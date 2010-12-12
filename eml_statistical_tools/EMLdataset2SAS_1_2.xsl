@@ -122,7 +122,7 @@ infile 'PUT-PATH-TO-DATA-FILE<xsl:value-of select="position()"/>-HERE' <xsl:text
         <xsl:for-each select="contact"> 
 * Contact: <xsl:text/>
             <xsl:call-template name="partyNameEmail"/><xsl:text>;</xsl:text>
-        </xsl:for-each> <xsl:value-of select="position()"/>
+        </xsl:for-each> 
         
 Title1 ' <xsl:value-of select="title"/>' <xsl:text>;</xsl:text>
         
