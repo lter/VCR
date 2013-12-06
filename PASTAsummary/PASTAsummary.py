@@ -71,7 +71,7 @@ mailList=argList['mailList']
 #userData="Basic " + (uName + ":" + pWord).encode("base64").rstrip()
 #print(userData)
 
-userData="Basic dWlkPVZDUixvPUxURVIsZGM9ZWNvaW5mb3JtYXRpY3MsZGM9b3JnOlZDUjFWQ1I="
+userData="Basic XXXXXXXXXXXX"
 
 ## Define functions for later
 def metadataUseCount(pastaScope,pastaId,pastaVersion):
