@@ -1,0 +1,162 @@
+PASTA Summary
+
+PASTAsummary creates, for each contact, summary reports of PASTA data
+and metadata downloads, using the audit web services in PASTA.
+
+CUSTOMIZATION
+PASTA audit reports require authentication. 
+
+You must edit the program to uncomment:
+#Uncomment these to set up an authentication string stored in userData
+#  Note that you can then save the string for future use. 
+#uName='uid=VCR,o=LTER,dc=ecoinformatics,dc=org'
+#pWord=''
+#userData="Basic " + (uName + ":" + pWord).encode("base64").rstrip()
+#print(userData)
+
+On subsequent runs, you may wish to save the userData string, allowing the username and password to be removed from the program code as in:
+
+userData="Basic aBcDeF....=" where aBcDeF are from the userData string
+generated above.
+
+You also need to specify where to find the .xsl file used for
+tranforming the raw XML output into .html for display. As in:
+
+styleSheetNameHTML='/home/jhp7e/src/python/PASTAsummary2.xsl'
+
+This stylesheet can be edited to produce customized HTML. 
+
+Finally, you need to customize the mail command to work with your
+system. As in:
+
+emailCmd='/bin/mailx -s "PASTA Download Report"  '
+
+Note: emailing is only one of the output options. If you don't use it,
+you don't need to set this.
+
+SYNTAX
+
+usage: ./PASTAsummary.py [options] PASTAscope
+
+Produce reports on data usage for specified scope by contact
+
+positional arguments:
+  PASTAscope            PASTA scope for report e.g. knb-lter-vcr
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --identifier IDENTIFIER, -i IDENTIFIER
+                        PASTA identifier
+  --revision REVISION, -r REVISION
+                        PASTA revision
+  --fromdate PASTAFROMTIME, -f PASTAFROMTIME
+                        e.g., 2013-12-30, or 2013-11-18T13:05:00
+  --todate PASTATOTIME, -t PASTATOTIME
+                        e.g., 2013-11-18T13:05:00
+  --outputtype {html,xml}, -o {html,xml}
+  --create {list,directory,email}, -c {list,directory,email}
+  --createdir CREATEDIR, -d CREATEDIR
+                        name of directory in which to store results if
+                        --create=directory is chosen
+  --maillist MAILLIST, -m MAILLIST
+                        specify file to read email addresses (one per line) to
+                        be used for sending reports
+  --genmaillist GENMAILLIST, -g GENMAILLIST
+                        generate a mailing list from contacts, specify file
+                        where contact email addresses will be stored. No other
+                        outputs will be produced.
+  --quiet, -q           suppress messages during processing
+
+
+Basic use of PASTAsummary
+
+PASTAsummary.py knb-lter-nwk 
+
+Generates a list to standard output of individual reports in a .html
+format for all packages in the knb-lter-nwk scope in the last 31 days.
+
+PASTAsummary.py --identifier 2 knb-lter-nwk
+
+Generates a list to standard output of individual reports in a .html
+format for all packages in the knb-lter-nwk.2 scope in the last 31
+days.
+
+PASTAsummary.py --identifier 2 --revision 1 knb-lter-nwk
+
+Generates a list to standard output of individual reports in a .html
+format for the knb-lter-nwk/2/1 package. 
+
+DATE CONTROL
+ 
+PASTAsummary.py --fromdate '2013-10-01' --todate '2013-11-01' knb-lter-nwk 
+
+Generates a list to standard output of individual reports in a .html
+format for all packages in the knb-lter-nwk scope from October 1, 2013
+through November 1, 2013. ISO8601 time codes in the form
+2013-10-01T13:51:30 can also be used.
+
+OUTPUT CONTROL
+
+PASTAsummary.py -outputtype html knb-lter-nwk 
+
+Generates HTML summaries for each contact in the the specified scope
+and writes it to standard output. This is the default.
+
+PASTAsummary.py -outputtype xml knb-lter-nwk 
+
+Generates an overall XML summary file for the specified scope and
+writes it to standard output. This is the file that is transformed to
+produce all other outputs.
+
+PASTAsummary.py --create email knb-lter-nwk 
+
+Generates individualized HTML summaries for each contact in the the
+specified scope and sends it via email to each contact listed in the
+metadata files.
+
+PASTAsummary.py --create directory knb-lter-nwk 
+
+Generates individualized HTML summaries for each contact in the the
+specified scope and creates a directory called PASTAReportYYYYMMDDHHmm
+where YYYY is the current year, MM the current month number, DD the
+current day number, HH the current hour and mm the current minute. The
+directory will contain separate files in the form user_at_domain.edu
+for each of the contacts. A different output directory may be
+specified using the --createdir option as in:
+
+PASTAsummary.py --create directory --createdir mydir knb-lter-nwk 
+
+which stores the output into the mydir directory. 
+
+EMAIL LISTS
+
+By default PASTAsummary.py automatically generates emails for each
+contact listed in any of the datasets within the scope specified when
+the --create email option is specified. However, a list of specific email addresses to be used may be specified. 
+
+PASTAsummary.py --create email --maillist mylist.txt knb-lter-nwk 
+
+Generates emails only to the addresses listed (one per line) in the
+mylist.txt file.
+
+If you wish to create a file of email addresses that are extracted from the metadata documents, for editing prior to using it with the --maillist option you can use: 
+
+PASTAsummary.py --genmaillist myoutlist.txt knb-lter-nwk 
+
+which generates the file myoutlist.txt containing all the contacts
+listed for documents in the specified scope. This file may be edited
+with a text editor to remove users who do not want to receive reports
+and then used with the --maillist option to create customized
+mailings. No other outputs are generated by this option.
+
+
+
+
+
+
+
+
+
+
+
+
