@@ -21,6 +21,18 @@ pastaToTime=datetime.today()
 pastaFromTime=(pastaToTime-timedelta(days=31)).strftime("%Y-%m-%dT%H:%M:%S")
 pastaToTime=pastaToTime.strftime("%Y-%m-%dT%H:%M:%S")
 
+# message to be sent to accompany HTML report attachments
+emailMsgOut="The attached file has a web page summarizing downloads of datasets \nyou are the contact for. Login at: https://portal.lternet.edu/nis/dataPackageAudit.jsp \nif you want the specific date and time details. \n"
+
+#Uncomment these to set up an authentication string stored in userData
+#  Note that you can then save the string for future use. 
+uName='uid=VCR,o=LTER,dc=ecoinformatics,dc=org'
+pWord=''
+userData="Basic " + (uName + ":" + pWord).encode("base64").rstrip()
+print(userData)
+
+#userData="Basic aBcD....."
+
 parser=argparse.ArgumentParser(prog=sys.argv[0],description='Produce reports on data usage for specified scope by contact',usage='%(prog)s [options] PASTAscope')
 parser.add_argument('PASTAscope', type=str,help='PASTA scope for report e.g. knb-lter-vcr')
 parser.add_argument('--identifier','-i',type=int,default=-999,required=False,dest='identifier',help='PASTA identifier')
@@ -36,7 +48,7 @@ parser.add_argument('--quiet','-q',action="store_false",default='store_true',hel
 
 args=parser.parse_args()
 argList=vars(args)
-pastaScope=argList['scope']
+pastaScope=argList['PASTAscope']
 if argList['identifier'] >= 0:
     pastaId=str(argList['identifier'])
 else:
@@ -63,15 +75,6 @@ mailList=argList['mailList']
 ##if len(sys.argv) > 3:    
 ##    pastaFromTime=sys.argv[2]
 ##    pastaToTime=sys.argv[3]
-
-#Uncomment these to set up an authentication string stored in userData
-#  Note that you can then save the string for future use. 
-#uName='uid=VCR,o=LTER,dc=ecoinformatics,dc=org'
-#pWord=''
-#userData="Basic " + (uName + ":" + pWord).encode("base64").rstrip()
-#print(userData)
-
-userData="Basic XXXXXXXXXXXX"
 
 ## Define functions for later
 def metadataUseCount(pastaScope,pastaId,pastaVersion):
@@ -311,7 +314,7 @@ else:
             if argList['createType']=='email' :
                 fileOut=tempfile.NamedTemporaryFile(suffix=".html",delete=True)
                 msgOut=tempfile.NamedTemporaryFile(suffix=".txt",delete=True)
-                msgOut.write("The attached file has a web page summarizing downloads of datasets \nyou are the contact for. Login at: https://portal.lternet.edu/nis/dataPackageAudit.jsp \nif you want the specific date and time details. \n")
+                msgOut.write(emailMsgOut)
                 transform=XSLT_ET.XSLT(xslt)
                 newdom=transform(xml1,contactEmail="'"+contactEmail+"'")
                 fileOut.write(XSLT_ET.tostring(newdom,pretty_print=True))
