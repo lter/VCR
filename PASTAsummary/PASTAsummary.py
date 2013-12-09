@@ -8,6 +8,7 @@ import sys,argparse,os,tempfile
 from datetime import datetime,timedelta,time
 import xml.etree.ElementTree as ET
 import lxml.etree as XSLT_ET
+from getpass import getpass
 
 DEBUG=0
 
@@ -24,17 +25,11 @@ pastaToTime=pastaToTime.strftime("%Y-%m-%dT%H:%M:%S")
 # message to be sent to accompany HTML report attachments
 emailMsgOut="The attached file has a web page summarizing downloads of datasets \nyou are the contact for. Login at: https://portal.lternet.edu/nis/dataPackageAudit.jsp \nif you want the specific date and time details. \n"
 
-#Uncomment these to set up an authentication string stored in userData
-#  Note that you can then save the string for future use. 
-uName='uid=VCR,o=LTER,dc=ecoinformatics,dc=org'
-pWord=''
-userData="Basic " + (uName + ":" + pWord).encode("base64").rstrip()
-print(userData)
-
-#userData="Basic aBcD....."
-
 parser=argparse.ArgumentParser(prog=sys.argv[0],description='Produce reports on data usage for specified scope by contact',usage='%(prog)s [options] PASTAscope')
 parser.add_argument('PASTAscope', type=str,help='PASTA scope for report e.g. knb-lter-vcr')
+parser.add_argument('--userid','-u',type=str,default='',required=False,dest='userId',help='user id for login')
+parser.add_argument('--password','-p',type=str,default='',required=False,dest='pWord',help='password for login')
+parser.add_argument('--authfile','-a',type=str,default='userdata.txt',required=False,dest='authFile',help='name of authorization file (if used) Default is userdata.txt')
 parser.add_argument('--identifier','-i',type=int,default=-999,required=False,dest='identifier',help='PASTA identifier')
 parser.add_argument('--revision','-r',type=int,default=-999,required=False,dest='revision',help='PASTA revision')
 parser.add_argument('--fromdate','-f',type=str,dest='pastaFromTime',default=pastaFromTime,help='e.g., 2013-12-30, or 2013-11-18T13:05:00')
@@ -49,6 +44,28 @@ parser.add_argument('--quiet','-q',action="store_false",default='store_true',hel
 args=parser.parse_args()
 argList=vars(args)
 pastaScope=argList['PASTAscope']
+# set or get username and password or authorization file
+userId=argList['userId']
+pWord=argList['pWord']
+authFile=argList['authFile']
+# if no username is specified, try opening the authorization file
+try:
+    if userId=='':
+        authFileIn=open(authFile,"r")
+        userData=authFileIn.readline()
+        authFileIn.close()
+except:
+# if no file, solicit input
+    if userId=='':
+        userId=raw_input("Username: ")
+    uName='uid='+userId+',o=LTER,dc=ecoinformatics,dc=org'
+    if pWord == '':
+        pWord=getpass("Password: ")
+    userData="Basic " + (uName + ":" + pWord).encode("base64").rstrip()
+# to see the user string for saving to an authorization file, uncomment the following line
+#print(userData)
+
+
 if argList['identifier'] >= 0:
     pastaId=str(argList['identifier'])
 else:
