@@ -4,22 +4,8 @@ PASTAsummary creates, for each contact, summary reports of PASTA data
 and metadata downloads, using the audit web services in PASTA.
 
 CUSTOMIZATION
-PASTA audit reports require authentication. 
 
-You must edit the program to uncomment:
-#Uncomment these to set up an authentication string stored in userData
-#  Note that you can then save the string for future use. 
-#uName='uid=VCR,o=LTER,dc=ecoinformatics,dc=org'
-#pWord=''
-#userData="Basic " + (uName + ":" + pWord).encode("base64").rstrip()
-#print(userData)
-
-On subsequent runs, you may wish to save the userData string, allowing the username and password to be removed from the program code as in:
-
-userData="Basic aBcDeF....=" where aBcDeF are from the userData string
-generated above.
-
-You also need to specify where to find the .xsl file used for
+You need to specify where to find the .xsl file used for
 tranforming the raw XML output into .html for display. As in:
 
 styleSheetNameHTML='/home/jhp7e/src/python/PASTAsummary2.xsl'
@@ -34,6 +20,21 @@ emailCmd='/bin/mailx -s "PASTA Download Report"  '
 Note: emailing is only one of the output options. If you don't use it,
 you don't need to set this.
 
+AUTHENTICATION 
+
+PASTA audit reports require authentication. If no set of --username
+myId --password myPasswd options are specified, you will be prompted
+for username and password.
+
+To allow automation, the file 'userdata.txt' will be checked for a
+valid userdata string in the form:
+
+Basic dWlkPVZDUixvPUxYRVIsZGM9ZWNvaW9mb3JtYXRpY3MsSGM9b3JnOlZDUjFWQ1I=
+
+The --authfile option can specify the path to a file other than
+userdata.txt
+
+
 SYNTAX
 
 usage: ./PASTAsummary.py [options] PASTAscope
@@ -45,6 +46,13 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
+  --userid USERID, -u USERID
+                        user id for login
+  --password PWORD, -p PWORD
+                        password for login
+  --authfile AUTHFILE, -a AUTHFILE
+                        name of authorization file (if used) Default is
+                        userdata.txt
   --identifier IDENTIFIER, -i IDENTIFIER
                         PASTA identifier
   --revision REVISION, -r REVISION
@@ -68,7 +76,8 @@ optional arguments:
   --quiet, -q           suppress messages during processing
 
 
-Basic use of PASTAsummary
+
+BASIC USE OF PASTAsummary
 
 PASTAsummary.py knb-lter-nwk 
 
