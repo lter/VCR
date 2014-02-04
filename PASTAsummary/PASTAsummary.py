@@ -122,6 +122,7 @@ def metadataUseCount(pastaScope,pastaId,pastaVersion):
 
     usock=urllib2.urlopen(req,timeout=160)
     if(DEBUG==1):
+        print("\nMETADATA ------------")
         print("url: "+str(usock.geturl()))
         print("HTML return code: "+str(usock.getcode()))
         print(usock.info())
@@ -158,6 +159,14 @@ def entityReport(pastaScope,pastaId,pastaVersion,pastaEntity):
 
     try:
         usock=urllib2.urlopen(req)
+        if(DEBUG==1):
+            print("\nDATA ------------")
+            print("url: "+str(usock.geturl()))
+            print("HTML return code: "+str(usock.getcode()))
+            print(usock.info())
+            print(usock.readlines())
+            usock.close()
+            usock=urllib2.urlopen(req,timeout=160)
     except:
         entityDownloadCountX=ET.SubElement(entitiesX,"entityDownloadCount")
         entityDownloadCountX.text="0"
@@ -174,12 +183,16 @@ def entityReport(pastaScope,pastaId,pastaVersion,pastaEntity):
     myCount=0
     userArray={'public':0}
     for b in blist:
-        myCount=myCount+1
+        responseStatus=b.find('./responseStatus').text
         user=b.find('./user').text
-        if user in userArray:
-            userArray[user]=userArray[user]+1
-        else:
-            userArray[user]=1
+# only count if download didn't fail with 401 code
+        if responseStatus != '401':
+            myCount=myCount+1
+            if user in userArray:
+                userArray[user]=userArray[user]+1
+            else:
+                userArray[user]=1
+    #print("myCount= "+str(myCount)+"\n")
     sortedUsers= sorted(userArray.keys(),key=lambda i: userArray[i])
     sortedUsers.reverse()
     entityUserCountX=ET.SubElement(entityX,"entityUserCount")
@@ -193,7 +206,7 @@ def entityReport(pastaScope,pastaId,pastaVersion,pastaEntity):
             entityUserDownloadCountX.text=str(userArray[myKey])
 
             #print("user= "+myKey+ "   downloads="+str(userArray[myKey])
-    return(len(blist))        
+    return(myCount)        
        
 
 # START MAIN PROGRAM

@@ -8,6 +8,7 @@
 <xsl:template name="root" match="/">
     <xsl:for-each select="/pastaSummaries/pastaSummary/contacts/contact/electronicMailAddress">
         <xsl:if test="contains(.,$contactEmail)='true'">
+        <xsl:if test="../../../dataDownloadTotalCount > 0">
        <html>
        <center>
         <h1>PASTA Download Summary for <xsl:value-of select="$contactEmail"/></h1>
@@ -18,6 +19,8 @@
     </xsl:for-each>
        </html>
         </xsl:if>
+        </xsl:if>
+
     </xsl:for-each>
          
 </xsl:template>
