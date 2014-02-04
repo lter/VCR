@@ -25,7 +25,7 @@ pastaToTime=pastaToTime.strftime("%Y-%m-%dT%H:%M:%S")
 # message to be sent to accompany HTML report attachments
 emailMsgOut="The attached file has a web page summarizing downloads of datasets \nyou are the contact for. Login at: https://portal.lternet.edu/nis/dataPackageAudit.jsp \nif you want the specific date and time details. \n"
 
-parser=argparse.ArgumentParser(prog=sys.argv[0],description='Produce reports on data usage for specified scope by contact',usage='%(prog)s [options] PASTAscope')
+parser=argparse.ArgumentParser(prog=sys.argv[0],description='Produce reports on data usage for specified scope by contact',usage='%(prog)s [options --help]  PASTAscope')
 parser.add_argument('PASTAscope', type=str,help='PASTA scope for report e.g. knb-lter-vcr')
 parser.add_argument('--userid','-u',type=str,default='',required=False,dest='userId',help='user id for login')
 parser.add_argument('--password','-p',type=str,default='',required=False,dest='pWord',help='password for login')
@@ -48,19 +48,28 @@ pastaScope=argList['PASTAscope']
 userId=argList['userId']
 pWord=argList['pWord']
 authFile=argList['authFile']
+
 # if no username is specified, try opening the authorization file
-try:
-    if userId=='':
+userData='' 
+if userId == '':
+    try:
         authFileIn=open(authFile,"r")
         userData=authFileIn.readline()
         authFileIn.close()
-except:
-# if no file, solicit input
-    if userId=='':
-        userId=raw_input("Username: ")
+    except:    
+        userData='' 
+
+if userData == '' and userId == '':
+    userId=raw_input("Username: ")
     uName='uid='+userId+',o=LTER,dc=ecoinformatics,dc=org'
     if pWord == '':
         pWord=getpass("Password: ")
+else:
+    uName='uid='+userId+',o=LTER,dc=ecoinformatics,dc=org'
+    if pWord == '' and userData == '':
+        pWord=getpass("Password: ")
+
+if userData == '':
     userData="Basic " + (uName + ":" + pWord).encode("base64").rstrip()
 # to see the user string for saving to an authorization file, uncomment the following line
 #print(userData)
@@ -209,6 +218,9 @@ if pastaId == '':
 else:
     pastaIds=pastaId
     #print pastaString
+
+# set up a list to hold contact emails    
+contactEmailArray={}   
 for pastaId in pastaIds.split():
     if pastaRev == '':
         pastaUrl="http://pasta.lternet.edu/package/eml/"+pastaScope+"/"+pastaId                      
@@ -221,8 +233,6 @@ for pastaId in pastaIds.split():
         pastaVersions.reverse()
     else:
         pastaVersions=[pastaRev]
-    # set up a list to hold contact emails    
-    contactEmailArray={}   
     for pastaVersion in pastaVersions:
         pastaSummaryX=ET.SubElement(xRoot,"pastaSummary")    
         if args.quiet:
