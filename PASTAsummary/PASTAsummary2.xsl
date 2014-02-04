@@ -41,7 +41,7 @@
         </xsl:for-each>
     </xsl:template>
     <xsl:template  name="entity">
-            <p>Data Entity: <xsl:value-of select="./entityName"/> had <xsl:value-of select="./entityDownloadCount"/> downloads by <xsl:value-of select="./entityUserCount"/> distinct users<br></br>
+            <p>Data Entity: <xsl:value-of select="./entityName"/> had <xsl:value-of select="./entityDownloadCount"/> attempted downloads by <xsl:value-of select="./entityUserCount"/> distinct users<br></br>
                 <table border='0'>
                 <xsl:for-each select="./entityUsers/entityUser">
                     <xsl:call-template name="entityUser"/>
@@ -51,6 +51,6 @@
           
     </xsl:template>
     <xsl:template  name="entityUser">
-        <tr><td>user: <xsl:value-of select="./entityUserId"/></td> <td align="right"><xsl:value-of select="./entityUserDownloadCount"/> downloads</td></tr>
+        <tr><td>user: <xsl:value-of select="./entityUserId"/></td> <td align="right"><xsl:value-of select="./entityUserDownloadCount"/> successful downloads</td></tr>
     </xsl:template>
 </xsl:stylesheet>
