@@ -345,7 +345,8 @@ else:
                 newdom=transform(xml1,contactEmail="'"+contactEmail+"'")
                 print(XSLT_ET.tostring(newdom,pretty_print=True))
             if argList['createType']=='directory' :
-                contactFileName=contactEmail.replace("@","_at_")
+                contactEmailStripped=contactEmail.strip()    # get rid of leading and trailing spaces
+                contactFileName=contactEmailStripped.replace("@","_at_")+".html"
                 fileOut=open(outDirName+"/"+contactFileName,mode='w')
                 transform=XSLT_ET.XSLT(xslt)
                 newdom=transform(xml1,contactEmail="'"+contactEmail+"'")
