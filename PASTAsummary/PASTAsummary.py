@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # This loops through PASTA datasets within a given scope and creates a
 # directory of XML reports, with files identified by files
+# John Porter - jhp7e@virginia.edu - 2014
 
 import urllib2
 #import urllib  # for python3
@@ -350,7 +351,7 @@ else:
                 fileOut=open(outDirName+"/"+contactFileName,mode='w')
                 transform=XSLT_ET.XSLT(xslt)
                 newdom=transform(xml1,contactEmail="'"+contactEmail+"'")
-                fileOut.write(XSLT_ET.tostring(newdom,pretty_print=True))
+                fileOut.write(str(XSLT_ET.tostring(newdom,pretty_print=True)))
                 fileOut.close()
             if argList['createType']=='email' :
                 fileOut=tempfile.NamedTemporaryFile(suffix=".html",delete=True)
