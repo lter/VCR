@@ -30,7 +30,7 @@
         <xsl:if test="../../../dataDownloadTotalCount > 0">
             <hr>
                 <p><b> <xsl:value-of select="../../../packageId"/> - <xsl:value-of select="../../../title"/></b><br></br>
-                Metadata Downloads: <xsl:value-of select="../../../metadataDownloadCount"/>,     Data Downloads: <xsl:value-of select="../../../dataDownloadTotalCount"/> 
+                Metadata Views: <xsl:value-of select="../../../metadataDownloadCount"/>,     Data Downloads: <xsl:value-of select="../../../dataDownloadTotalCount"/> 
                 <xsl:for-each select="../../../entities/entity">
                     <xsl:call-template name="entity"/>
                 </xsl:for-each>
