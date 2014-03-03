@@ -359,12 +359,16 @@ else:
                 msgOut.write(emailMsgOut)
                 transform=XSLT_ET.XSLT(xslt)
                 newdom=transform(xml1,contactEmail="'"+contactEmail+"'")
-                fileOut.write(XSLT_ET.tostring(newdom,pretty_print=True))
-                #print(fileOut.name)
-                fileOut.seek(0)
-                msgOut.seek(0)
-                os.system(emailCmd+" -a "+fileOut.name+" "+contactEmail+" <"+msgOut.name)
-                fileOut.close()
+                try:
+                    fileOut.write(XSLT_ET.tostring(newdom,pretty_print=True))
+                    #print(fileOut.name)
+                    fileOut.seek(0)
+                    msgOut.seek(0)
+                    os.system(emailCmd+" -a "+fileOut.name+" "+contactEmail+" <"+msgOut.name)
+                    fileOut.close()
+                except:
+                    # if there is no output for file, do nothing and close it
+                    fileOut.close()
                 msgOut.close()
 
 
