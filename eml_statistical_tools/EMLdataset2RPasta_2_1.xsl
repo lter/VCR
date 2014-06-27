@@ -102,7 +102,7 @@ infile<xsl:value-of select="position()"/> &lt;- sub("^https","http",infile<xsl:v
                         <xsl:value-of select="position()"/>  
                     </xsl:variable>               
   
-# Fix any interval or ratio columns mistakenly read in as nominal and nominal columns read as numeric or dates read a strings
+# Fix any interval or ratio columns mistakenly read in as nominal and nominal columns read as numeric or dates read as strings
                 <xsl:for-each select="attributeList">
                     <xsl:for-each select="attribute">  
                         <!--change spaces to . in attribute names -->
@@ -119,26 +119,25 @@ if (class(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttri
 if (class(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>)!="factor") dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>&lt;- as.factor(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>)<xsl:text></xsl:text> 
                          </xsl:when>
                             <xsl:when test="measurementScale/dateTime[. != '']">
-# convert dateTime strings to R date structure (date or POSIXct)  <xsl:text></xsl:text>                              
-                                <xsl:if test="measurementScale/dateTime/formatString[. != '']">                                   
+<!-- Don't attempt to convert dates where the format lacks the year month and day -->
+                                <xsl:if test="(contains(measurementScale/dateTime/formatString,'Y') or contains(measurementScale/dateTime/formatString,'y'))and
+                                    (contains(measurementScale/dateTime/formatString,'M') and
+                                    (contains(measurementScale/dateTime/formatString,'D') or contains(measurementScale/dateTime/formatString,'d')))">                                   
+# attempting to convert dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/> dateTime string to R date structure (date or POSIXct)  <xsl:text></xsl:text>                              
 tmpDateFormat&lt;-"<xsl:call-template name="getDateFormat"> <xsl:with-param name="text" select="measurementScale/dateTime/formatString" /></xsl:call-template>"<xsl:text></xsl:text>  
                                     <xsl:choose>
                                         <xsl:when test="contains(measurementScale/dateTime/formatString,'Z')">
-try(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>&lt;-as.POSIXct(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>,format=tmpDateFormat,tz='UTC'))<xsl:text></xsl:text> 
+dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>&lt;-as.POSIXct(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>,format=tmpDateFormat,tz='UTC')<xsl:text></xsl:text> 
                                         </xsl:when>
                                         <xsl:when test="contains(measurementScale/dateTime/formatString,'H') or contains(measurementScale/dateTime/formatString,'h')"> 
-try(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>&lt;-as.POSIXct(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>,format=tmpDateFormat))<xsl:text></xsl:text> 
-                                        </xsl:when>
+dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>&lt;-as.POSIXct(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>,format=tmpDateFormat)<xsl:text></xsl:text> 
+                                        </xsl:when>                                            
                                         <xsl:otherwise>
-try(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>&lt;-as.Date(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>,format=tmpDateFormat))<xsl:text></xsl:text>                                         
+dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>&lt;-as.Date(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>,format=tmpDateFormat)<xsl:text></xsl:text>                                         
                                         </xsl:otherwise>
                                     </xsl:choose>
 rm(tmpDateFormat) <xsl:text></xsl:text> 
-                                </xsl:if>                                                       
-                                <xsl:if test="measurementScale/dateTime/formatString[. = '']">
-try(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>&lt;-as.POSIXct(dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>))<xsl:text></xsl:text>
-                             
-                                </xsl:if>
+                                </xsl:if> 
                             </xsl:when>
                         </xsl:choose>
                     </xsl:for-each>
