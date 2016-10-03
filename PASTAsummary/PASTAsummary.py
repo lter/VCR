@@ -252,7 +252,7 @@ for pastaId in pastaIds.split():
         if args.quiet:
              sys.stderr.write("processing package: "+pastaScope+"/"+str(pastaId)+"/"+str(pastaVersion)+"\n")
         # Get the data package metadata to extract dataset title and entities
-        # liburl2 truncates downloaded data at 32768 bytes if HTTPS used
+        # liburl2 truncates downloaded data at 32768 bytes if HTTPS used 
         emlUrl="http://pasta.lternet.edu/package/metadata/eml/"+pastaScope+"/"+str(pastaId)+"/"+str(pastaVersion)
         emlReq=urllib2.Request(emlUrl)
         emlReq.add_header('Authorization', userData)
