@@ -51,7 +51,8 @@ if userId == '':
         userData='' 
 
 if userData == '' and userId == '':
-    userId=raw_input("Username: ")
+    sys.stderr.write("Username: ")
+    userId=raw_input()
     uName='uid='+userId+',o=LTER,dc=ecoinformatics,dc=org'
     if pWord == '':
         pWord=getpass("Password: ")
