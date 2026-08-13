@@ -8,6 +8,8 @@
     Users of the R program need to substitute the path to their data file in the GET DATA statement.
 
     CHANGES Corrected header issue and added structure statement
+    2024-06-05 - Changed If statement checking date conversions to ignore empty input date/time strings in determining if the
+    conversion worked
     
     Things that still need work: 
            Multi-line data records
@@ -45,6 +47,23 @@
         </xsl:for-each>
     </xsl:template>
     
+    <xsl:template name="authenticationInstructions">
+# IMPORTANT: Due to new authentication requirements for direct access to EDI data you must provide an <text></text>
+# authentication key. You can find instructions for obtaining a group-based access key at:
+# https://youtu.be/fieZSmHk2H4?si=Wo9a5GsAOYp3dnWS 
+# and the IAM web site at: 
+# https://auth.edirepository.org
+#
+# Once you have the access key, just paste it between the quotes below and the code should run correctly and
+# automatically download data from EDI for the code to use. 
+        
+myEDIAccessKey=""   # put your access key between the quotes <text>
+    
+#
+</text>
+        
+        <text></text>
+    </xsl:template>
     <xsl:template name="partyName">
         <xsl:value-of select="individualName/salutation"/><xsl:text> </xsl:text> <xsl:value-of select="individualName/givenName"/> <xsl:text> </xsl:text> <xsl:value-of select="individualName/surName"/> <xsl:text> - </xsl:text>
         <xsl:value-of select="organizationName"/><xsl:text> </xsl:text>
@@ -58,7 +77,10 @@
     </xsl:template>
 
     <xsl:template name="dataset">
-        <xsl:for-each select="../@packageId"># Package ID: <xsl:value-of
+        <xsl:call-template name="authenticationInstructions" /><xsl:text></xsl:text>
+<text>   
+</text>
+<xsl:for-each select="../@packageId"># Package ID: <xsl:value-of
             select="../@packageId"/> Cataloging System:<xsl:value-of select="../@system"/>  <xsl:text>.</xsl:text>  
         </xsl:for-each>
         <xsl:variable name="oneLineTitle">
@@ -84,14 +106,27 @@
         <xsl:if test="../access[1]/@system[. = 'https://pasta.lternet.edu']">
 # Metadata Link: https://portal.lternet.edu/nis/metadataviewer?packageid=<xsl:value-of select="../@packageId"/>
         </xsl:if>
-# Stylesheet v2.11 for metadata conversion into program: John H. Porter, Univ. Virginia, jporter@virginia.edu<xsl:text></xsl:text>      
-        <xsl:if test="dataTable[. !='']">
-            <xsl:for-each select="dataTable">
-<!-- List attributes --><xsl:text/> 
+# Stylesheet v2.17 for metadata conversion into program: John H. Porter, Univ. Virginia, jporter@virginia.edu<xsl:text></xsl:text><xsl:text></xsl:text>      
+# Uncomment the following lines to have R clear previous work, or set a working directory
+# rm(list=ls())<xsl:text></xsl:text>      
 
-inUrl<xsl:value-of select="position()"/>  &lt;- "<xsl:value-of select="physical/distribution/online/url"></xsl:value-of>"<xsl:text/><xsl:text></xsl:text> 
+# setwd("C:/users/my_name/my_dir") <xsl:text></xsl:text>      
+
+# check for required access key
+if (myEDIAccessKey == ""){
+stop(paste0("A VALID EDI ACCESS KEY IS REQUIRED FOR THIS CODE TO DOWNLOAD THE NEEDED DATA \n",
+"Please set the myEDIAccessKey variable to a valid key and rerun this script"))
+}
+
+options(HTTPUserAgent="EDI_CodeGen")<xsl:text></xsl:text>      
+<xsl:if test="dataTable[. !='']">
+            <xsl:for-each select="dataTable">
+<!-- List attributes --><xsl:text/>
+	      
+
+inUrl<xsl:value-of select="position()"/>  &lt;- paste0("<xsl:value-of select="physical/distribution/online/url"></xsl:value-of>","?key=",myEDIAccessKey)<xsl:text/><xsl:text></xsl:text> 
 infile<xsl:value-of select="position()"/> &lt;- tempfile()<xsl:text></xsl:text>
-try(download.file(inUrl<xsl:value-of select="position()"/>,infile<xsl:value-of select="position()"/>,method="curl"))
+try(download.file(inUrl<xsl:value-of select="position()"/>,infile<xsl:value-of select="position()"/>,method="curl",extra=paste0(' -A "',getOption("HTTPUserAgent"),'"')))
 if (is.na(file.size(infile<xsl:value-of select="position()"/>))) download.file(inUrl<xsl:value-of select="position()"/>,infile<xsl:value-of select="position()"/>,method="auto")
 
                   <xsl:choose>                           
@@ -143,8 +178,7 @@ tmp<xsl:value-of select="$tableNum"/><xsl:value-of select="$cleanAttribName"/>&l
                                         </xsl:otherwise>
                                     </xsl:choose>
 # Keep the new dates only if they all converted correctly
-if(length(tmp<xsl:value-of select="$tableNum"/><xsl:value-of select="$cleanAttribName"/>) == length(tmp<xsl:value-of select="$tableNum"/><xsl:value-of select="$cleanAttribName"/>[!is.na(tmp<xsl:value-of select="$tableNum"/><xsl:value-of select="$cleanAttribName"/>)])){dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/> &lt;- tmp<xsl:value-of select="$tableNum"/><xsl:value-of select="$cleanAttribName"/><xsl:text></xsl:text> } else {print("Date conversion failed for dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>. Please inspect the data and do the date conversion yourself.")}                                                                    
-rm(tmpDateFormat,tmp<xsl:value-of select="$tableNum"/><xsl:value-of select="$cleanAttribName"/>) <xsl:text></xsl:text> 
+if(nrow(dt<xsl:value-of select="$tableNum"/>[dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/> != "",]) == length(tmp<xsl:value-of select="$tableNum"/><xsl:value-of select="$cleanAttribName"/>[!is.na(tmp<xsl:value-of select="$tableNum"/><xsl:value-of select="$cleanAttribName"/>)])){dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/> &lt;- tmp<xsl:value-of select="$tableNum"/><xsl:value-of select="$cleanAttribName"/><xsl:text></xsl:text> } else {print("Date conversion failed for dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/>. Please inspect the data and do the date conversion yourself.")}                                                                    
                                 </xsl:if> 
                             </xsl:when>
                         </xsl:choose>
@@ -182,6 +216,7 @@ dt<xsl:value-of select="$tableNum"/>$<xsl:value-of select="$cleanAttribName"/> &
 
 
 # Here is the structure of the input data frame:
+print("dt<xsl:value-of select="$tableNum"/>)<xsl:text></xsl:text> Structure")		    
 str(dt<xsl:value-of select="$tableNum"/>)<xsl:text></xsl:text>                            
 attach(dt<xsl:value-of select="$tableNum"/>)<xsl:text></xsl:text>                            
 # The analyses below are basic descriptions of the variables. After testing, they should be replaced.                 
@@ -193,10 +228,12 @@ attach(dt<xsl:value-of select="$tableNum"/>)<xsl:text></xsl:text>
                                 <xsl:with-param name="text" select="attributeName" />
                             </xsl:call-template>
                         </xsl:variable>
-summary(<xsl:value-of select="$cleanAttribName"/>)<xsl:text></xsl:text>               
+print(" ")
+print("Summary of <xsl:value-of select="$cleanAttribName"/>")<xsl:text></xsl:text>
+print(summary(<xsl:value-of select="$cleanAttribName"/>))<xsl:text></xsl:text>               
                     </xsl:for-each>
                 </xsl:for-each> 
-                # Get more details on character variables
+# Get more details on character variables
                 <xsl:for-each select="attributeList">
                     <xsl:for-each select="attribute">
                         <xsl:if test="measurementScale/nominal|measurementScale/ordinal[. != '']">
@@ -205,7 +242,10 @@ summary(<xsl:value-of select="$cleanAttribName"/>)<xsl:text></xsl:text>
                                     <xsl:with-param name="text" select="attributeName"/>
                                 </xsl:call-template>
                             </xsl:variable> 
-summary(as.factor(dt<xsl:value-of select="$tableNum" />$<xsl:value-of select="$cleanAttribName"/>))<xsl:text/>
+
+print(" ")
+print("Summary of <xsl:value-of select="$cleanAttribName"/>")<xsl:text></xsl:text>
+print(summary(as.factor(dt<xsl:value-of select="$tableNum" />$<xsl:value-of select="$cleanAttribName"/>)))<xsl:text/>
                         </xsl:if>
                     </xsl:for-each>
                 </xsl:for-each>
@@ -474,11 +514,46 @@ rm(tmp_format, tmp_cols)
             </xsl:call-template>
         </xsl:variable>
         <xsl:variable name="a15">
-            <xsl:call-template name="string-add-v-to-leading-numbers">
+            <xsl:call-template name="string-replace-all">
                 <xsl:with-param name="text" select="$a14"/>
+                <xsl:with-param name="replace" select="'='"/>
+                <xsl:with-param name="by" select="'.equals.'"/>
             </xsl:call-template>
         </xsl:variable>
-        <xsl:value-of select="$a15"/>
+        <xsl:variable name="a16">
+            <xsl:call-template name="string-replace-all">
+                <xsl:with-param name="text" select="$a15"/>
+                <xsl:with-param name="replace" select="'&lt;'"/>
+                <xsl:with-param name="by" select="'.LT.'"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="a17">
+            <xsl:call-template name="string-replace-all">
+                <xsl:with-param name="text" select="$a16"/>
+                <xsl:with-param name="replace" select="'&lt;'"/>
+                <xsl:with-param name="by" select="'.LT.'"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="a18">
+            <xsl:call-template name="string-replace-all">
+                <xsl:with-param name="text" select="$a17"/>
+                <xsl:with-param name="replace" select="'&gt;'"/>
+                <xsl:with-param name="by" select="'.GT.'"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="a19">
+            <xsl:call-template name="string-replace-all">
+                <xsl:with-param name="text" select="$a18"/>
+                <xsl:with-param name="replace" select="'µ'"/>
+                <xsl:with-param name="by" select="'u'"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="a20">
+            <xsl:call-template name="string-add-v-to-leading-numbers">
+                <xsl:with-param name="text" select="$a19"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:value-of select="$a20"/>
     </xsl:template>
     
     <xsl:template name="string-replace-all">

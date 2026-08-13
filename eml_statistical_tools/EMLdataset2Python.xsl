@@ -43,7 +43,21 @@
             <xsl:call-template name="dataset"/>
         </xsl:for-each>
     </xsl:template>
-    
+    <xsl:template name="authenticationInstructions">
+# IMPORTANT: Due to new authentication requirements for direct access to EDI data you must provide an <text></text>
+# authentication key. You can find instructions for obtaining a group-based access key at:
+# https://youtu.be/fieZSmHk2H4?si=Wo9a5GsAOYp3dnWS 
+# and the IAM web site at: 
+# https://auth.edirepository.org
+#
+# Once you have the access key, just paste it between the quotes below and the code should run correctly and
+# automatically download data from EDI for the code to use. 
+        
+myEDIAccessKey=""   # put your access key between the quotes <text>
+            
+#
+</text>
+</xsl:template>
     <xsl:template name="partyName">
         <xsl:value-of select="individualName/salutation"/><xsl:text> </xsl:text> <xsl:value-of select="individualName/givenName"/> <xsl:text> </xsl:text> <xsl:value-of select="individualName/surName"/> <xsl:text> - </xsl:text>
         <xsl:value-of select="organizationName"/><xsl:text> </xsl:text>
@@ -57,6 +71,9 @@
     </xsl:template>
 
     <xsl:template name="dataset">
+        <xsl:call-template name="authenticationInstructions" /><xsl:text></xsl:text>
+        <text>   
+</text>
         <xsl:for-each select="../@packageId"># Package ID: <xsl:value-of
             select="../@packageId"/> Cataloging System:<xsl:value-of select="../@system"/>  <xsl:text>.</xsl:text>  
         </xsl:for-each>
@@ -83,8 +100,9 @@
         <xsl:if test="../access[1]/@system[. = 'https://pasta.lternet.edu']">
 # Metadata Link: https://portal.lternet.edu/nis/metadataviewer?packageid=<xsl:value-of select="../@packageId"/>
         </xsl:if>
-# Stylesheet v1.0 for metadata conversion into program: John H. Porter, Univ. Virginia, jporter@virginia.edu<xsl:text></xsl:text>      
+# Stylesheet v1.3 for metadata conversion into program: John H. Porter, Univ. Virginia, jporter@virginia.edu<xsl:text></xsl:text>      
 #<xsl:text></xsl:text>
+   
 <xsl:text> 
 # This program creates numbered PANDA dataframes named dt1,dt2,dt3...,
 # one for each data table in the dataset. It also provides some basic
@@ -94,13 +112,21 @@
         
 
      <xsl:if test="dataTable[. !='']">
+import sys<xsl:text></xsl:text>
 import numpy as np<xsl:text></xsl:text>
 import pandas as pd<xsl:text></xsl:text>
+         
+<xsl:text>
+# check for required access key
+if (myEDIAccessKey == ""):
+    sys.exit("A VALID EDI ACCESS KEY IS REQUIRED FOR THIS CODE TO DOWNLOAD THE NEEDED DATA \n"+"Please set the myEDIAccessKey variable to a valid key and rerun this script")
+
+</xsl:text>     
 
             <xsl:for-each select="dataTable">
 <!-- List attributes --><xsl:text/> 
 
-infile<xsl:value-of select="position()"/>  ="<xsl:value-of select="physical/distribution/online/url"></xsl:value-of>".strip()<xsl:text/><xsl:text></xsl:text> 
+infile<xsl:value-of select="position()"/>  ="<xsl:value-of select="physical/distribution/online/url"></xsl:value-of>".strip()+"?key="+myEDIAccessKey<xsl:text/><xsl:text></xsl:text> 
 infile<xsl:value-of select="position()"/>  = infile<xsl:value-of select="position()"/>.replace("https://","http://")
                 <xsl:choose>                           
                     <xsl:when test="physical/dataFormat/textFormat/complex/textFixed[. !='']">
@@ -179,6 +205,7 @@ print("--------------------\n\n")
 
 <xsl:template name="readCSV"> 
 dt<xsl:value-of select="position()"/> =pd.read_csv(infile<xsl:value-of select="position()"/><xsl:text> </xsl:text>
+          ,storage_options={'User-Agent':'EDI_CodeGen'}<xsl:text></xsl:text>
     <xsl:if test="physical/dataFormat/textFormat/numHeaderLines[.!='']">
           ,skiprows=<xsl:value-of select="physical/dataFormat/textFormat/numHeaderLines"/><xsl:text></xsl:text>
     </xsl:if>
@@ -277,6 +304,7 @@ dt<xsl:value-of select="position()"/> =pd.read_csv(infile<xsl:value-of select="p
     
     <xsl:template name="readFixed">
 dt<xsl:value-of select="position()"/> =pd.read_fwf(infile<xsl:value-of select="position()"/><xsl:text/>
+        ,storage_options={'User-Agent':'EDI_CodeGen'}<xsl:text></xsl:text>
         <xsl:for-each select="attributeList">       
         ,colspecs=[<xsl:text></xsl:text>
             <xsl:for-each select="attribute">
@@ -437,12 +465,47 @@ dt<xsl:value-of select="position()"/> =pd.read_fwf(infile<xsl:value-of select="p
                 <xsl:with-param name="by" select="'_semicolon_'"/>
             </xsl:call-template>
         </xsl:variable>
-        <xsl:variable name="a15">
-            <xsl:call-template name="string-add-v-to-leading-numbers">
+	        <xsl:variable name="a15">
+            <xsl:call-template name="string-replace-all">
                 <xsl:with-param name="text" select="$a14"/>
+                <xsl:with-param name="replace" select="'='"/>
+                <xsl:with-param name="by" select="'_equals_'"/>
+            </xsl:call-template>
+		</xsl:variable>
+        <xsl:variable name="a16">
+            <xsl:call-template name="string-replace-all">
+                <xsl:with-param name="text" select="$a15"/>
+                <xsl:with-param name="replace" select="'&lt;'"/>
+                <xsl:with-param name="by" select="'_LT_'"/>
             </xsl:call-template>
         </xsl:variable>
-        <xsl:value-of select="$a15"/>
+        <xsl:variable name="a17">
+            <xsl:call-template name="string-replace-all">
+                <xsl:with-param name="text" select="$a16"/>
+                <xsl:with-param name="replace" select="'&lt;'"/>
+                <xsl:with-param name="by" select="'_LT_'"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="a18">
+            <xsl:call-template name="string-replace-all">
+                <xsl:with-param name="text" select="$a17"/>
+                <xsl:with-param name="replace" select="'&gt;'"/>
+                <xsl:with-param name="by" select="'_GT_'"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="a19">
+            <xsl:call-template name="string-replace-all">
+                <xsl:with-param name="text" select="$a18"/>
+                <xsl:with-param name="replace" select="'µ'"/>
+                <xsl:with-param name="by" select="'u'"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="a20">
+            <xsl:call-template name="string-add-v-to-leading-numbers">
+                <xsl:with-param name="text" select="$a19"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:value-of select="$a20"/>
     </xsl:template>
     
     <xsl:template name="string-replace-all">
